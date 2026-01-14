@@ -2,7 +2,9 @@
 
 ## Dev
 ⚠️ 실행 시 반드시 bash로 실행하세요. (`sh` 사용 금지)
+
 `chmod +x scripts/*.sh`
+
 `bash scripts/run_fake.sh` 또는 `./scripts/run_fake.sh`
 
 ## 0. 프로젝트 개요
