@@ -37,6 +37,7 @@ Thumbs.db
 # ===== Env / secrets (DO NOT COMMIT) =====
 .env
 .env.*
+!.env.example
 *.pem
 *.key
 
