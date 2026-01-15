@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+
+set -euo pipefail
+
 source install/setup.bash
 
 # 예시: 너의 launch로 교체

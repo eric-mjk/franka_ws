@@ -1,0 +1,28 @@
+version: "3.8"
+
+services:
+  franka:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        USERNAME: mj
+        USER_UID: ${UID:-1000}
+        USER_GID: ${GID:-1000}
+    image: franka_ws:humble
+    container_name: franka_ws
+    network_mode: "host"
+    ipc: "host"
+    privileged: true
+    environment:
+      - DISPLAY=${DISPLAY}
+      - QT_X11_NO_MITSHM=1
+      - ROS_DOMAIN_ID=${ROS_DOMAIN_ID:-0}
+      # Wayland 환경이면 아래 주석 해제 (대부분 X11이면 필요 없음)
+      # - XDG_RUNTIME_DIR=/tmp/runtime-${UID}
+    volumes:
+      - ./:/workspaces/franka_ws:cached
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      - ${HOME}/.Xauthority:/home/mj/.Xauthority:rw
+    working_dir: /workspaces/franka_ws
+    command: bash -lc "sleep infinity"
