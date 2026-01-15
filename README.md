@@ -1,5 +1,12 @@
 # Franka FR3 ROS2 Project (MoveIt2 + ros2_control)
 
+## Dev
+⚠️ 실행 시 반드시 bash로 실행하세요. (`sh` 사용 금지)
+
+`chmod +x scripts/*.sh`
+
+`bash scripts/run_fake.sh` 또는 `./scripts/run_fake.sh`
+
 ## 0. 프로젝트 개요
 
 이 레포지토리는 **Franka Research 3 (FR3)** 로봇을 대상으로
