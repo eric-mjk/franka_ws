@@ -22,7 +22,7 @@
 ### 2️⃣ 레포지토리 클론
 
 ```bash
-git clone <YOUR_GITHUB_REPO_URL>
+git clone https://github.com/eric-mjk/franka_ws.git
 cd franka_ws
 ```
 
