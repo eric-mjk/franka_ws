@@ -1,11 +1,133 @@
 # Franka FR3 ROS2 Project (MoveIt2 + ros2_control)
 
+---
+
+## 🐳 Development Environment (Docker + ROS2)
+
+이 프로젝트는 **Docker 기반 ROS2 Humble 개발 환경**을 사용합니다.
+다른 컴퓨터에서도 동일한 환경을 빠르게 재현할 수 있도록 설계되어 있습니다.
+
+---
+
+### 1️⃣ 사전 요구사항 (Prerequisites)
+
+다음이 설치되어 있어야 합니다.
+
+* **Ubuntu 22.04**
+* **Docker**
+* **Docker Compose (v2)**
+
+---
+
+### 2️⃣ 레포지토리 클론
+
+```bash
+git clone https://github.com/eric-mjk/franka_ws.git
+cd franka_ws
+```
+
+> ⚠️ `build/`, `install/`, `log/` 디렉토리는 Git에 포함되지 않습니다.
+
+---
+
+### 3️⃣ (선택) 외부 의존 패키지 다운로드
+
+`franka_ros2`, MoveIt2 등 외부 패키지를 `vcs`로 관리하는 경우:
+
+```bash
+vcs import src < franka.repos
+```
+
+---
+
+### 4️⃣ Docker 컨테이너 빌드 & 실행
+
+```bash
+docker compose -f docker/docker-compose.yml up -d --build
+```
+
+* ROS2 Humble 개발 환경 이미지가 빌드됩니다.
+* 컨테이너는 백그라운드에서 실행됩니다.
+
+컨테이너 상태 확인:
+
+```bash
+docker compose -f docker/docker-compose.yml ps
+```
+
+---
+
+### 5️⃣ 컨테이너 접속
+
+```bash
+docker compose -f docker/docker-compose.yml exec franka bash
+```
+
+접속 후:
+
+* ROS2 환경은 자동으로 source 되어 있습니다.
+* 작업 디렉토리는 `/workspaces/franka_ws` 입니다.
+
+---
+
+### 6️⃣ 빌드 (컨테이너 내부)
+
+```bash
+colcon build
+source install/setup.bash
+```
+
+> ⚠️ 반드시 **컨테이너 내부에서** `colcon build`를 실행하세요.
+
+---
+
+### 7️⃣ 실행 예시
+
+```bash
+ros2 launch <package_name> <launch_file>.py
+```
+
+GUI(RViz, MoveIt)를 사용하는 경우:
+
+* 호스트 X11 환경을 그대로 사용합니다.
+* 별도의 설정 없이 화면이 표시됩니다.
+
+---
+
+### 8️⃣ 컨테이너 종료
+
+```bash
+docker compose -f docker/docker-compose.yml down
+```
+
+* 컨테이너만 종료됩니다.
+* 소스 코드 및 빌드 결과는 삭제되지 않습니다.
+
+---
+
+### 9️⃣ 디렉토리 구조 요약
+
+```text
+franka_ws/
+├── src/                 # ROS2 패키지 (Git으로 관리)
+├── docker/
+│   ├── Dockerfile       # ROS2 Humble 개발 환경 정의
+│   ├── docker-compose.yml
+│   └── entrypoint.sh
+├── build/               # colcon build 결과 (Git 제외)
+├── install/             # colcon install 결과 (Git 제외)
+├── log/                 # colcon 로그 (Git 제외)
+└── franka.repos         # 외부 의존성 정의 (선택)
+```
+
 ## Dev
 ⚠️ 실행 시 반드시 bash로 실행하세요. (`sh` 사용 금지)
 
 `chmod +x scripts/*.sh`
 
 `bash scripts/run_fake.sh` 또는 `./scripts/run_fake.sh`
+
+# 프로젝트 설명
 
 ## 0. 프로젝트 개요
 
