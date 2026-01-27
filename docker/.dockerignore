@@ -1,0 +1,10 @@
+.git
+**/.git
+build
+install
+log
+.vscode
+.idea
+*.bag
+*.db
+.env

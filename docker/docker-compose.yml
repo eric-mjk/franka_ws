@@ -1,0 +1,8 @@
+# docker/docker-compose.yml
+services:
+  franka:
+    image: franka-dev
+    container_name: franka_ws
+    volumes:
+      - ../:/workspace
+    tty: true
