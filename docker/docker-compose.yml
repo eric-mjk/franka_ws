@@ -1,8 +1,26 @@
-# docker/docker-compose.yml
 services:
   franka:
-    image: franka-dev
+    build:
+      context: ..
+      dockerfile: docker/dev.Dockerfile
+      args:
+        USERNAME: mj
+        USER_UID: ${UID:-1000}
+        USER_GID: ${GID:-1000}
+    image: franka-ros2-franka-dev:local
     container_name: franka_ws
+    network_mode: "host"
+    ipc: "host"
+    privileged: true
+    environment:
+    - DISPLAY=${DISPLAY}
+    - QT_X11_NO_MITSHM=1
+    - ROS_DOMAIN_ID=${ROS_DOMAIN_ID:-0}
     volumes:
-      - ../:/workspace
+      - ../:/workspaces/franka_ws
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      - ${HOME}/.Xauthority:/home/mj/.Xauthority:rw
+    working_dir: /workspaces/franka_ws
+    stdin_open: true
     tty: true
+    command: bash

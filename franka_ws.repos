@@ -1,5 +1,5 @@
 repositories:
   franka_ros2:
     type: git
-    url: https://github.com/frankarobotics/franka_ros2.git
+    url: https://github.com/eric-mjk/franka_ros2
     version: humble

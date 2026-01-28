@@ -15,3 +15,8 @@ RUN apt-get update && apt-get install -y \
 RUN locale-gen en_US en_US.UTF-8
 ENV LANG=en_US.UTF-8
 ENV LC_ALL=en_US.UTF-8
+
+RUN apt-get update && apt-get install -y \
+    curl ca-certificates \
+    git build-essential cmake sudo locales python3 \
+    && rm -rf /var/lib/apt/lists/*
