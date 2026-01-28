@@ -1,13 +1,6 @@
 services:
   franka:
-    build:
-      context: ..
-      dockerfile: docker/dev.Dockerfile
-      args:
-        USERNAME: mj
-        USER_UID: ${UID:-1000}
-        USER_GID: ${GID:-1000}
-    image: franka-ros2-franka-dev:local
+    image: franka_ws:latest
     container_name: franka_ws
     network_mode: "host"
     ipc: "host"
