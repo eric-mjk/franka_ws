@@ -29,6 +29,7 @@ setup(
     entry_points={
         'console_scripts': [
             "joint_state_echo = control.joint_state_echo:main",
+            "pose_goal = control.pose_goal:main",
         ],
     },
 )
