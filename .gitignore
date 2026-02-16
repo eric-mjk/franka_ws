@@ -1,17 +1,46 @@
-# ROS2 빌드 산출물 제외 (가장 중요)
+# ===== ROS2 / colcon =====
 build/
 install/
 log/
+*.log
 
-# Git 관련 파일 제외
-.git
-.gitignore
+# ===== ROS bags =====
+*.db3
+*.db3-wal
+*.db3-shm
+rosbag2_*/
 
-# Docker 관련 설정 제외 (이미지 내부에는 불필요)
-docker/
-docker-compose.yml
+# ===== Python =====
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+dist/
+build/
 
-# 기타 파이썬 캐시 및 임시 파일
-**/__pycache__
-**/*.pyc
+# ===== CMake / ament =====
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+compile_commands.json
+
+# ===== VSCode / JetBrains =====
 .vscode/
+.idea/
+
+# ===== OS files =====
+.DS_Store
+Thumbs.db
+
+# ===== Env / secrets (DO NOT COMMIT) =====
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# ===== Temporary =====
+*.swp
+*~
