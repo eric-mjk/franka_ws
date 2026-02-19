@@ -111,16 +111,7 @@ mtc::Task MTCTaskNode::createTask()
   task.setProperty("eef", hand_group_name);
   task.setProperty("ik_frame", hand_frame);
 
-// Disable warnings for this line, as it's a variable that's set but not used in this example
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunused-but-set-variable"
-  mtc::Stage* current_state_ptr = nullptr;  // Forward current_state on to grasp pose generator
-#pragma GCC diagnostic pop
-
-  auto stage_state_current = std::make_unique<mtc::stages::CurrentState>("current");
-  current_state_ptr = stage_state_current.get();
-  task.add(std::move(stage_state_current));
-  
+  // Planners  
   auto sampling_planner = std::make_shared<mtc::solvers::PipelinePlanner>(node_);
   auto interpolation_planner = std::make_shared<mtc::solvers::JointInterpolationPlanner>();
 
@@ -129,11 +120,33 @@ mtc::Task MTCTaskNode::createTask()
   cartesian_planner->setMaxAccelerationScalingFactor(1.0);
   cartesian_planner->setStepSize(.01);
 
-  auto stage_open_hand =
-      std::make_unique<mtc::stages::MoveTo>("open hand", interpolation_planner);
+
+
+// Disable warnings for this line, as it's a variable that's set but not used in this example
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-but-set-variable"
+  mtc::Stage* current_state_ptr = nullptr;  // Forward current_state on to grasp pose generator
+#pragma GCC diagnostic pop
+
+  auto stage_state_current = std::make_unique<mtc::stages::CurrentState>(
+      "current");
+  current_state_ptr = stage_state_current.get();
+  task.add(std::move(stage_state_current));
+
+  auto stage_open_hand = std::make_unique<mtc::stages::MoveTo>(
+      "open hand",
+      interpolation_planner);
   stage_open_hand->setGroup(hand_group_name);
   stage_open_hand->setGoal("open");
   task.add(std::move(stage_open_hand));
+
+  auto stage_move_to_pick = std::make_unique<mtc::stages::Connect>(
+      "move to pick",
+      mtc::stages::Connect::GroupPlannerVector{ { arm_group_name, sampling_planner } });
+  stage_move_to_pick->setTimeout(5.0);
+  stage_move_to_pick->properties().configureInitFrom(mtc::Stage::PARENT);
+  task.add(std::move(stage_move_to_pick));
+
 
   return task;
 }
@@ -163,3 +176,4 @@ int main(int argc, char** argv)
   rclcpp::shutdown();
   return 0;
 }
+
