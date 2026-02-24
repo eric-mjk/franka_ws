@@ -1,10 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
 
-  <!-- Dual-arm friendly version of franka_arm_srdf:
-       - unique virtual_joint name
-       - correct child_link (exists in URDF)
-       - configurable parent_frame (e.g., left_base / right_base)
+  <!-- Upstream helpers (once) -->
+  <xacro:include filename="$(find franka_description)/robots/common/group_definition.xacro"/>
+
+  <!-- Hand SRDF macros (once) -->
+  <xacro:include filename="$(find franka_description)/end_effectors/franka_hand/franka_hand.srdf.xacro"/>
+
+  <!--
+    Dual-arm friendly SRDF macro:
+    - unique virtual_joint name per arm (prefix-based)
+    - child_link exists in URDF: ${prefix}link0 (e.g., left_fr3_link0)
+    - parent_frame configurable (default: world)
   -->
   <xacro:macro name="franka_arm_srdf_dual"
                params="arm_id
@@ -14,25 +21,17 @@
                        no_prefix:='false'
                        parent_frame:='world'">
 
-    <!-- Match naming convention used in franka_description SRDF:
-         prefix = arm_prefix + arm_id + '_'  (unless no_prefix)
-         Example: arm_prefix='left_' arm_id='fr3' => 'left_fr3_'
-    -->
+    <!-- prefix convention (matches upstream franka_description SRDF) -->
     <xacro:property name="prefix" value="${'' if no_prefix else arm_prefix + arm_id + '_'}" />
-
-    <!-- group_definition creates the actual MoveIt group with joints/links -->
-    <xacro:include filename="$(find franka_description)/robots/common/group_definition.xacro"/>
 
     <!-- tip link convention copied from upstream -->
     <xacro:property name="tip_link"
                     value="${prefix + 'hand_tcp' if hand and ee_id == 'franka_hand' else prefix + 'link8'}"/>
 
+    <!-- group_definition creates the actual MoveIt group -->
     <xacro:group_definition prefix="${prefix}" group_name="${prefix}arm" tip_link="${tip_link}"/>
 
-    <!-- ✅ FIX #1: unique virtual joint name
-         ✅ FIX #2: child_link must exist in URDF -> use ${prefix}link0
-         ✅ FIX #3: parent_frame should match your mount frame (left_base/right_base)
-    -->
+    <!-- Unique virtual joint per arm -->
     <virtual_joint name="${prefix}virtual_joint"
                    type="fixed"
                    parent_frame="${parent_frame}"
@@ -63,12 +62,9 @@
     <disable_collisions link1="${prefix}link6" link2="${prefix}link8" reason="Default"/>
     <disable_collisions link1="${prefix}link7" link2="${prefix}link8" reason="Adjacent"/>
 
-    <!-- Hand SRDF (kept compatible with upstream) -->
-    <xacro:if value="${hand}">
-      <xacro:if value="${ee_id == 'franka_hand'}">
-        <xacro:include filename="$(find franka_description)/end_effectors/franka_hand/franka_hand.srdf.xacro"/>
-        <xacro:franka_hand_srdf prefix="${prefix}"/>
-      </xacro:if>
+    <!-- Hand SRDF -->
+    <xacro:if value="${hand and ee_id == 'franka_hand'}">
+      <xacro:franka_hand_srdf prefix="${prefix}"/>
     </xacro:if>
 
   </xacro:macro>
