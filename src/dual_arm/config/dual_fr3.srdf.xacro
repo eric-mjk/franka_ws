@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="dual_fr3">
+
+  <!-- Use dual-friendly SRDF macro (no duplicate/broken virtual_joint) -->
+  <xacro:include filename="$(find dual_arm)/config/franka_arm_dual.srdf.xacro"/>
+
+  <xacro:arg name="hand" default="true"/>
+  <xacro:arg name="ee_id" default="franka_hand"/>
+  <xacro:arg name="no_prefix" default="false"/>
+
+  <!-- Left arm SRDF -->
+  <xacro:franka_arm_srdf_dual
+      arm_id="fr3"
+      hand="$(arg hand)"
+      ee_id="$(arg ee_id)"
+      no_prefix="$(arg no_prefix)"
+      arm_prefix="left_"
+      parent_frame="left_base">
+  </xacro:franka_arm_srdf_dual>
+
+  <!-- Right arm SRDF -->
+  <xacro:franka_arm_srdf_dual
+      arm_id="fr3"
+      hand="$(arg hand)"
+      ee_id="$(arg ee_id)"
+      no_prefix="$(arg no_prefix)"
+      arm_prefix="right_"
+      parent_frame="right_base">
+  </xacro:franka_arm_srdf_dual>
+
+  <!-- Combined planning group -->
+  <group name="both_arms">
+    <group name="left_fr3_arm"/>
+    <group name="right_fr3_arm"/>
+  </group>
+
+</robot>

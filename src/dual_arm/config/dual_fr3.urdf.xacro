@@ -1,0 +1,65 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="dual_fr3">
+
+  <!-- 1) bring in the FR3 model -->
+  <xacro:include filename="$(find dual_arm)/config/fr3.urdf.xacro"/>
+
+  <!-- 2) shared args -->
+  <xacro:arg name="hand" default="true"/>
+  <xacro:arg name="ee_id" default="franka_hand"/>
+  <xacro:arg name="use_fake_hardware" default="false"/>
+  <xacro:arg name="fake_sensor_commands" default="false"/>
+  <xacro:arg name="ros2_control" default="true"/>
+  <xacro:arg name="arm_id" default="fr3" />
+
+  <!-- 3) per-robot args -->
+  <xacro:arg name="left_robot_ip" default=""/>
+  <xacro:arg name="right_robot_ip" default=""/>
+
+  <!-- 4) pose of each base in the world (xyz for base position & rpy for base orientation : roll pitch yaw)-->
+  <xacro:arg name="left_xyz" default="0 0 0"/>
+  <xacro:arg name="left_rpy" default="0 0 0"/>
+  <xacro:arg name="right_xyz" default="0.8 0 0"/>
+  <xacro:arg name="right_rpy" default="0 0 0"/>
+
+  <!-- World link -->
+  <link name="world"/>
+
+
+  <joint name="world_to_left_base" type="fixed">
+    <parent link="world"/>
+    <child link="left_base"/>
+    <origin xyz="$(arg left_xyz)" rpy="$(arg left_rpy)"/>
+  </joint>
+
+  <joint name="world_to_right_base" type="fixed">
+    <parent link="world"/>
+    <child link="right_base"/>
+    <origin xyz="$(arg right_xyz)" rpy="$(arg right_rpy)"/>
+  </joint>
+
+  <!-- 5) Instantiate left arm -->
+  <xacro:fr3
+    arm_id="$(arg arm_id)"           
+    arm_prefix="left"   
+    hand="$(arg hand)"
+    ee_id="$(arg ee_id)"
+    ros2_control="$(arg ros2_control)"
+    robot_ip="$(arg left_robot_ip)"
+    use_fake_hardware="$(arg use_fake_hardware)"
+    fake_sensor_commands="$(arg fake_sensor_commands)"
+    connected_to="left_base"/>
+
+  <!-- 6) Instantiate right arm -->
+  <xacro:fr3
+    arm_id="$(arg arm_id)"           
+    arm_prefix="right"
+    hand="$(arg hand)"
+    ee_id="$(arg ee_id)"
+    ros2_control="$(arg ros2_control)"
+    robot_ip="$(arg right_robot_ip)"
+    use_fake_hardware="$(arg use_fake_hardware)"
+    fake_sensor_commands="$(arg fake_sensor_commands)"
+    connected_to="right_base"/>
+
+</robot>
