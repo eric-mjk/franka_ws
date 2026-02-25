@@ -264,9 +264,9 @@ def generate_launch_description():
         DeclareLaunchArgument(ee_id_name, default_value="franka_hand"),
         DeclareLaunchArgument(use_fake_hw_name, default_value="true"),
         DeclareLaunchArgument(fake_sensor_cmds_name, default_value="true"),
-        DeclareLaunchArgument(left_xyz_name, default_value="0 0 0"),
+        DeclareLaunchArgument(left_xyz_name, default_value="0 -0.3 0"),
         DeclareLaunchArgument(left_rpy_name, default_value="0 0 0"),
-        DeclareLaunchArgument(right_xyz_name, default_value="0.8 0 0"),
+        DeclareLaunchArgument(right_xyz_name, default_value="0 0.3 0"),
         DeclareLaunchArgument(right_rpy_name, default_value="0 0 0"),
     ]
 

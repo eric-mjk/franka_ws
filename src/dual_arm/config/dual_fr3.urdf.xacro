@@ -17,9 +17,9 @@
   <xacro:arg name="right_robot_ip" default=""/>
 
   <!-- 4) pose of each base in the world (xyz for base position & rpy for base orientation : roll pitch yaw)-->
-  <xacro:arg name="left_xyz" default="0 0 0"/>
+  <xacro:arg name="left_xyz" default="0 -0.5 0"/>
   <xacro:arg name="left_rpy" default="0 0 0"/>
-  <xacro:arg name="right_xyz" default="0.8 0 0"/>
+  <xacro:arg name="right_xyz" default="0 0.5 0"/>
   <xacro:arg name="right_rpy" default="0 0 0"/>
 
   <!-- World link -->
