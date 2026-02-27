@@ -1,6 +1,6 @@
 services:
   franka:
-    image: eric.franka_ws:latest
+    image: eric.dual_fr3:latest
     container_name: franka_ws
     network_mode: "host"
     ipc: "host"

@@ -1,5 +1,4 @@
 # docker/libfranka.Dockerfile
-# ✅ 너의 기존 이미지 태그로 바꾸기
 FROM eric.moveit2:latest
 
 ENV DEBIAN_FRONTEND=noninteractive
@@ -13,13 +12,36 @@ RUN rm -rf /usr/local/include/franka || true && \
     rm -f /usr/local/lib/libfranka* || true && \
     ldconfig
 
-# libfranka 0.19.0 .deb 설치 (Jammy)
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    wget ca-certificates && \
-    rm -rf /var/lib/apt/lists/*
+# =========================
+# libfranka 0.15.0 (source build) + robotpkg pinocchio
+# https://github.com/frankarobotics/libfranka/tree/0.15.0
+# =========================
 
-RUN wget -q https://github.com/frankarobotics/libfranka/releases/download/0.19.0/libfranka_0.19.0_jammy_amd64.deb && \
-    wget -q https://github.com/frankarobotics/libfranka/releases/download/0.19.0/libfranka_0.19.0_jammy_amd64.deb.sha256 && \
-    sha256sum -c libfranka_0.19.0_jammy_amd64.deb.sha256 && \
-    dpkg -i libfranka_0.19.0_jammy_amd64.deb || (apt-get update && apt-get install -f -y) && \
-    rm -f libfranka_0.19.0_jammy_amd64.deb*
+# build deps + robotpkg repo setup + pinocchio install
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      build-essential cmake git \
+      libpoco-dev libeigen3-dev libfmt-dev \
+      lsb-release curl ca-certificates \
+    && mkdir -p /etc/apt/keyrings \
+    && curl -fsSL http://robotpkg.openrobots.org/packages/debian/robotpkg.asc \
+      | tee /etc/apt/keyrings/robotpkg.asc >/dev/null \
+    && echo "deb [arch=amd64 signed-by=/etc/apt/keyrings/robotpkg.asc] http://robotpkg.openrobots.org/packages/debian/pub $(lsb_release -cs) robotpkg" \
+      | tee /etc/apt/sources.list.d/robotpkg.list >/dev/null \
+    && apt-get update \
+    && apt-get install -y --no-install-recommends robotpkg-pinocchio \
+    && rm -rf /var/lib/apt/lists/*
+
+# build & install libfranka 0.15.0
+RUN git clone --recurse-submodules https://github.com/frankaemika/libfranka.git /tmp/libfranka && \
+    cd /tmp/libfranka && \
+    git checkout 0.15.0 && \
+    git submodule update --init --recursive && \
+    mkdir -p build && cd build && \
+    cmake -DCMAKE_BUILD_TYPE=Release \
+          -DCMAKE_PREFIX_PATH=/opt/openrobots/lib/cmake \
+          -DBUILD_TESTS=OFF \
+          .. && \
+    make -j"$(nproc)" && \
+    make install && \
+    ldconfig && \
+    rm -rf /tmp/libfranka
