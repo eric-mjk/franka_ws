@@ -25,7 +25,7 @@ def generate_launch_description():
     # 1) include your working bringup (controllers + move_group + rviz)
     bringup = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
-            os.path.join(dual_arm_share, "launch", "dual_moveit_demo.launch.py")
+            os.path.join(dual_arm_share, "launch", "refactor_moveit.launch.py")
         )
     )
 
