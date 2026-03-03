@@ -1,39 +1,51 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
 
-  <!-- Bring in franka_robot macro -->
   <xacro:include filename="$(find franka_description)/robots/common/franka_robot.xacro"/>
 
   <!--
-    Macro: fr3
-    Creates one FR3 instance with optional prefix, arm_id, and mount frame (connected_to).
+    franka_robot.xacro 내부(franka_hand 브랜치)가 $(arg special_connection)을 참조함.
+    그래서 여기서 arg를 반드시 정의해줘야 함(안 그러면 "undefined arg" 류 에러).
+    필요 시 xacro 실행 시 special_connection:=... 로 override 가능.
   -->
+  <xacro:arg name="special_connection" default=""/>
+
   <xacro:macro name="fr3" params="
       arm_id
-      arm_prefix:= ''
-      no_prefix:= 'false'
-      hand:= 'true'
-      ee_id:= 'franka_hand'
-      special_connection:= ''
-      xyz_ee:= '0 0 0'
-      rpy_ee:= '0 0 ${-pi/4}'
-      tcp_xyz:= '0 0 0.1034'
-      tcp_rpy:= '0 0 0'
-      safety_distance:= '0.03'
-      with_sc:= 'false'
-      ros2_control:= 'false'
-      robot_ip:= ''
-      use_fake_hardware:= 'false'
-      fake_sensor_commands:= 'false'
-      gazebo:= 'false'
-      gazebo_effort:= 'false'
-      description_pkg:= 'franka_description'
-      connected_to:= 'base'
+      arm_prefix:=''
+      no_prefix:='false'
+      hand:='true'
+      ee_id:='franka_hand'
+      special_connection:='$(arg special_connection)'
+      xyz:='0 0 0'
+      rpy:='0 0 0'
+      xyz_ee:='0 0 0'
+      rpy_ee:='0 0 ${-pi/4}'
+      tcp_xyz:='0 0 0.1034'
+      tcp_rpy:='0 0 0'
+      safety_distance:='0.03'
+      with_sc:='false'
+      ros2_control:='false'
+      robot_ip:=''
+      use_fake_hardware:='false'
+      fake_sensor_commands:='false'
+      gazebo:='false'
+      gazebo_effort:='false'
+      description_pkg:='franka_description'
+      connected_to:='base'
     ">
 
-    <!-- Append an underscore to the user-provided prefix, if non-empty. -->
+    <!-- prefix 처리: left -> left_ / '' -> '' -->
     <xacro:property name="prefix" value="${arm_prefix}"/>
-    <xacro:property name="modified_prefix" value="${prefix + '_' if prefix else ''}"/>
+    <xacro:property name="modified_prefix" value="${prefix + '_' if prefix != '' else ''}"/>
+
+    <!--
+      franka_robot.xacro의 ee_with_one_link 브랜치(connection 계산)가 뒤집혀 있어,
+      special_connection이 ''이면 connection이 ''가 되어 깨질 수 있음.
+      => franka_hand가 아닌 EE를 쓰는 경우 special_connection이 비어있으면 link8로 강제.
+    -->
+    <xacro:property name="sc_fixed"
+                    value="${(arm_id + '_link8') if (ee_id != 'franka_hand' and ee_id != 'none' and special_connection == '') else special_connection}"/>
 
     <xacro:franka_robot
         arm_id="${arm_id}"
@@ -41,31 +53,35 @@
         joint_limits="${xacro.load_yaml('$(find franka_description)/robots/fr3/joint_limits.yaml')}"
         inertials="${xacro.load_yaml('$(find franka_description)/robots/fr3/inertials.yaml')}"
         kinematics="${xacro.load_yaml('$(find franka_description)/robots/fr3/kinematics.yaml')}"
-        accelerometer_config="${xacro.load_yaml('$(find franka_description)/robots/fr3/accelerometers.yaml')}"
         dynamics="${xacro.load_yaml('$(find franka_description)/robots/fr3/dynamics.yaml')}"
+
+        parent="${connected_to}"
+        xyz="${xyz}"
+        rpy="${rpy}"
 
         gazebo="${gazebo}"
         hand="${hand}"
         ee_id="${ee_id}"
-        special_connection="${special_connection}"
+        special_connection="${sc_fixed}"
+
         xyz_ee="${xyz_ee}"
         rpy_ee="${rpy_ee}"
         tcp_xyz="${tcp_xyz}"
         tcp_rpy="${tcp_rpy}"
         safety_distance="${safety_distance}"
+
         with_sc="${with_sc}"
         ros2_control="${ros2_control}"
         robot_ip="${robot_ip}"
         use_fake_hardware="${use_fake_hardware}"
         fake_sensor_commands="${fake_sensor_commands}"
         gazebo_effort="${gazebo_effort}"
-        no_prefix="${no_prefix}"
 
+        no_prefix="${no_prefix}"
         arm_prefix="${modified_prefix}"
         description_pkg="${description_pkg}"
-        connected_to="${connected_to}">
-    </xacro:franka_robot>
+        connected_to="${connected_to}"
+    />
 
   </xacro:macro>
-
 </robot>

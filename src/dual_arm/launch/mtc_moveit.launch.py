@@ -11,6 +11,7 @@ from launch_ros.actions import Node
 from launch_ros.parameter_descriptions import ParameterValue
 from launch_ros.substitutions import FindPackageShare
 
+from launch.actions import TimerAction
 
 def load_yaml(package_name, file_path):
     package_path = get_package_share_directory(package_name)
@@ -138,14 +139,34 @@ def generate_launch_description():
     moveit_config_dict.update(planning_scene_monitor)
 
     # -----------------------------
+    # MTC demo node
+    # -----------------------------
+    mtc_demo_node = Node(
+        package="dual_arm",
+        executable="mtc_handover",
+        output="screen",
+        parameters=[moveit_config_dict],
+    )
+
+    # Recommended: delay start so move_group + ros2_control + controllers are ready
+    mtc_demo_delayed = TimerAction(
+        period=20.0,  # seconds
+        actions=[mtc_demo_node],
+    )
+
+    # -----------------------------
     # Nodes
     # -----------------------------
     # move_group
+    move_group_capabilities = {
+        "capabilities": "move_group/ExecuteTaskSolutionCapability"
+    }
+
     move_group_node = Node(
         package="moveit_ros_move_group",
         executable="move_group",
         output="screen",
-        parameters=[moveit_config_dict],
+        parameters=[moveit_config_dict, move_group_capabilities,],
     )
 
 
@@ -271,6 +292,8 @@ def generate_launch_description():
         DeclareLaunchArgument(right_rpy_name, default_value="0 0 0"),
     ]
 
+
+
     return LaunchDescription(
         launch_args + [
             rviz_node,
@@ -281,5 +304,6 @@ def generate_launch_description():
             franka_robot_state_broadcaster,
             left_gripper_launch,
             right_gripper_launch,
+            mtc_demo_delayed,   # ✅ add this
         ] + load_controllers
     )
