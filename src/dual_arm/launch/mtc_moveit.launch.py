@@ -52,8 +52,6 @@ def generate_launch_description():
     # -----------------------------
     # URDF / SRDF (xacro -> string)
     # -----------------------------
-
-    # URDF
     dual_arm_share = get_package_share_directory("dual_arm")
 
     urdf_xacro = os.path.join(dual_arm_share, "config", "dual_fr3.urdf.xacro")
@@ -73,7 +71,6 @@ def generate_launch_description():
     ])
     robot_description = {"robot_description": ParameterValue(robot_description_config, value_type=str)}
 
-    # SRDF
     srdf_xacro = os.path.join(dual_arm_share, "config", "dual_fr3.srdf.xacro")
     robot_description_semantic_config = Command([
         FindExecutable(name="xacro"), " ", srdf_xacro,
@@ -85,12 +82,10 @@ def generate_launch_description():
     }
 
     # -----------------------------
-    # MoveIt “demo-style” config dict
+    # MoveIt config dict
     # -----------------------------
-    # kinematics
     kinematics_yaml = load_yaml("dual_arm", "config/dual_kinematics.yaml") or {}
 
-    # planning pipelines (demo style keys)
     ompl_yaml = load_yaml("dual_arm", "config/ompl_planning.yaml") or {}
     planning_pipelines = {
         "planning_pipelines": ["ompl"],
@@ -103,13 +98,16 @@ def generate_launch_description():
                                 "default_planner_request_adapters/FixStartStateBounds "
                                 "default_planner_request_adapters/FixStartStateCollision "
                                 "default_planner_request_adapters/FixStartStatePathConstraints",
-            "start_state_max_bounds_error": 0.1,
+            # FIX 7: Raise start_state_max_bounds_error to absorb fake-hardware
+            # finger joint drift (~0.035 rad). Must be >= the value set in the
+            # MTC task (task.setProperty("start_state_max_bounds_error", 0.05)).
+            # Without this, FixStartStateBounds rejects the current state and
+            # Connect never finds a valid seed → planning fails immediately.
+            "start_state_max_bounds_error": 0.05,
         },
     }
-    # ompl_planning.yaml 내용은 보통 planner_configs 등이므로 'ompl' 아래에 merge
     planning_pipelines["ompl"].update(ompl_yaml)
 
-    # controllers (MoveItSimpleControllerManager)
     moveit_simple_controllers_yaml = load_yaml("dual_arm", "config/dual_fr3_controllers.yaml") or {}
     moveit_controllers = {
         "moveit_controller_manager": "moveit_simple_controller_manager/MoveItSimpleControllerManager",
@@ -128,7 +126,11 @@ def generate_launch_description():
         "publish_transforms_updates": True,
     }
 
-    # demo처럼 “한 덩어리 dict”로 묶어 move_group에 넣기
+    # FIX 8: Build moveit_config_dict ONCE, then add the move_group capability
+    # BEFORE constructing move_group_node. In the original code, move_group_node
+    # was constructed first (without the capability), and then the dict was mutated
+    # — too late, Python dicts are passed by reference but the Node already
+    # captured the parameters list at construction time.
     moveit_config_dict = {}
     moveit_config_dict.update(robot_description)
     moveit_config_dict.update(robot_description_semantic)
@@ -138,39 +140,36 @@ def generate_launch_description():
     moveit_config_dict.update(trajectory_execution)
     moveit_config_dict.update(planning_scene_monitor)
 
+    # FIX 9: Add ExecuteTaskSolutionCapability to move_group BEFORE constructing
+    # the node. The original code assigned to a dead local variable after the
+    # node was already built — the capability was never actually passed through.
+    move_group_capabilities = {
+        "capabilities": "move_group/ExecuteTaskSolutionCapability"
+    }
+    moveit_config_dict.update(move_group_capabilities)
+
     # -----------------------------
-    # MTC demo node
+    # Nodes
     # -----------------------------
+    move_group_node = Node(
+        package="moveit_ros_move_group",
+        executable="move_group",
+        output="screen",
+        parameters=[moveit_config_dict],
+    )
+
+    # MTC demo node — delayed so move_group + controllers are ready
     mtc_demo_node = Node(
         package="dual_arm",
         executable="mtc_handover",
         output="screen",
         parameters=[moveit_config_dict],
     )
-
-    # Recommended: delay start so move_group + ros2_control + controllers are ready
     mtc_demo_delayed = TimerAction(
-        period=20.0,  # seconds
+        period=5.0,
         actions=[mtc_demo_node],
     )
 
-    # -----------------------------
-    # Nodes
-    # -----------------------------
-    # move_group
-    move_group_capabilities = {
-        "capabilities": "move_group/ExecuteTaskSolutionCapability"
-    }
-
-    move_group_node = Node(
-        package="moveit_ros_move_group",
-        executable="move_group",
-        output="screen",
-        parameters=[moveit_config_dict, move_group_capabilities,],
-    )
-
-
-    # RViz (demo와 동일하게 핵심 4개만)
     rviz_config = os.path.join(dual_arm_share, "rviz", "moveit.rviz")
     rviz_node = Node(
         package="rviz2",
@@ -181,12 +180,11 @@ def generate_launch_description():
         parameters=[
             robot_description,
             robot_description_semantic,
-            planning_pipelines,   # ✅ demo처럼 planning_pipelines dict
+            planning_pipelines,
             kinematics_yaml,
         ],
     )
 
-    # robot_state_publisher
     robot_state_publisher = Node(
         package="robot_state_publisher",
         executable="robot_state_publisher",
@@ -195,7 +193,6 @@ def generate_launch_description():
         parameters=[robot_description],
     )
 
-    # ros2_control: demo처럼 controllers yaml만 주고, robot_description은 토픽에서 받게 remap
     ros2_controllers_path = os.path.join(dual_arm_share, "config", "dual_ros2_controllers.yaml")
     ros2_control_node = Node(
         package="controller_manager",
@@ -204,12 +201,11 @@ def generate_launch_description():
         parameters=[robot_description, ros2_controllers_path],
         remappings=[
             ("/controller_manager/robot_description", "/robot_description"),
-            ("joint_states", "arm/joint_states"),  # ros2_control의 joint_states를 /arm/joint_states로
+            ("joint_states", "arm/joint_states"),
         ],
         on_exit=Shutdown(),
     )
 
-    # controllers spawner (demo 스타일)
     load_controllers = []
     for controller in ["joint_state_broadcaster", "left_arm_controller", "right_arm_controller"]:
         load_controllers.append(
@@ -221,7 +217,6 @@ def generate_launch_description():
             )
         )
 
-    # joint state aggregator: /arm/joint_states + gripper joint_states -> /joint_states
     joint_state_aggregator = Node(
         package="joint_state_publisher",
         executable="joint_state_publisher",
@@ -237,7 +232,6 @@ def generate_launch_description():
         }],
     )
 
-    # Franka robot state broadcaster (실기/리얼 모드에서만)
     franka_robot_state_broadcaster = ExecuteProcess(
         cmd=[
             "ros2", "run", "controller_manager", "spawner",
@@ -249,7 +243,6 @@ def generate_launch_description():
         condition=UnlessCondition(use_fake_hardware),
     )
 
-    # gripper bringup (옵션)
     left_gripper_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             PathJoinSubstitution([FindPackageShare("franka_gripper"), "launch", "gripper.launch.py"])
@@ -292,8 +285,6 @@ def generate_launch_description():
         DeclareLaunchArgument(right_rpy_name, default_value="0 0 0"),
     ]
 
-
-
     return LaunchDescription(
         launch_args + [
             rviz_node,
@@ -304,6 +295,6 @@ def generate_launch_description():
             franka_robot_state_broadcaster,
             left_gripper_launch,
             right_gripper_launch,
-            mtc_demo_delayed,   # ✅ add this
+            mtc_demo_delayed,
         ] + load_controllers
     )

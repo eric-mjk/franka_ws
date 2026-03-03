@@ -118,7 +118,7 @@ def generate_launch_description():
         "moveit_manage_controllers": True,
         "trajectory_execution.allowed_execution_duration_scaling": 1.2,
         "trajectory_execution.allowed_goal_duration_margin": 0.5,
-        "trajectory_execution.allowed_start_tolerance": 0.01,
+        "trajectory_execution.allowed_start_tolerance": 0.05,
     }
     planning_scene_monitor = {
         "publish_planning_scene": True,
@@ -183,7 +183,7 @@ def generate_launch_description():
         parameters=[robot_description, ros2_controllers_path],
         remappings=[
             ("/controller_manager/robot_description", "/robot_description"),
-            ("joint_states", "arm/joint_states"),  # ros2_control의 joint_states를 /arm/joint_states로
+            ("joint_states", "/arm/joint_states"),  # ros2_control의 joint_states를 /arm/joint_states로
         ],
         on_exit=Shutdown(),
     )

@@ -11,6 +11,11 @@
   <!-- Optional: parent frame(s) for virtual joints (defaults to world) -->
   <xacro:arg name="left_parent_frame" default="world"/>
   <xacro:arg name="right_parent_frame" default="world"/>
+  
+  <passive_joint name="right_fr3_finger_joint1"/>
+  <passive_joint name="right_fr3_finger_joint2"/>
+  <passive_joint name="left_fr3_finger_joint1"/>
+  <passive_joint name="left_fr3_finger_joint2"/>
 
   <!-- Left arm SRDF -->
   <xacro:franka_arm_srdf_dual
