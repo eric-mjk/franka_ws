@@ -1,3 +1,10 @@
+# This repository is terminated
+
+Check following repository.
+
+https://github.com/eric-mjk/Moveit_Dual_FR3 
+
+
 # franka_ws
 
 ROS 2 workspace for Franka FR3 robot control and motion planning with MoveIt 2.
